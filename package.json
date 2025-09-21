@@ -1,0 +1,58 @@
+{
+  "name": "mcp-content-analyzer",
+  "version": "1.0.0",
+  "description": "Hono-based MCP server for content analysis and Excel integration",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "mcp-content-analyzer": "./bin/mcp-analyzer.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "type-check": "tsc --noEmit",
+    "postinstall": "node scripts/setup-dependencies.js",
+    "install-global": "npm install -g .",
+    "update-analyzer": "npm update -g mcp-content-analyzer",
+    "setup": "node scripts/setup-dependencies.js && node scripts/generate-config.js",
+    "quick-start": "npm run setup && npm run build && npm start",
+    "create-distribution": "./scripts/create-distribution.sh"
+  },
+  "keywords": [
+    "mcp",
+    "claude",
+    "content-analysis",
+    "excel",
+    "hono",
+    "typescript"
+  ],
+  "author": "Your Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.14.1"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.3",
+    "@hono/zod-validator": "^0.7.3",
+    "@modelcontextprotocol/sdk": "^1.18.1",
+    "@types/cheerio": "^0.22.35",
+    "@types/mime-types": "^3.0.1",
+    "cheerio": "^1.1.2",
+    "dotenv": "^17.2.2",
+    "exceljs": "^4.4.0",
+    "file-type": "^21.0.0",
+    "hono": "^4.9.8",
+    "mammoth": "^1.11.0",
+    "mime-types": "^3.0.1",
+    "pdfjs-dist": "^5.4.149",
+    "playwright": "^1.55.0",
+    "winston": "^3.17.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
