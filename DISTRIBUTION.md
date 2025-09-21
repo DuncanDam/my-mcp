@@ -111,6 +111,17 @@ npm publish --access restricted
 npm install -g @your-org/mcp-content-analyzer
 ```
 
+## ⚠️ Expected Installation Warnings
+
+During installation, you may see these deprecation warnings:
+```
+npm warn deprecated inflight@1.0.6: This module is not supported...
+npm warn deprecated rimraf@2.7.1: Rimraf versions prior to v4...
+npm warn deprecated glob@7.2.3: Glob versions prior to v9...
+```
+
+**These warnings are safe to ignore.** They come from ExcelJS sub-dependencies and don't affect functionality. The application uses npm overrides to use modern versions where possible.
+
 ## 🛠️ Troubleshooting
 
 ### Installation Issues
