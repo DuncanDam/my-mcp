@@ -8,7 +8,7 @@ const mcp = new Hono();
 // Validation schemas
 const toolCallSchema = z.object({
   tool: z.string(),
-  arguments: z.record(z.any()).optional()
+  arguments: z.record(z.string(), z.any()).optional()
 });
 
 const workflowSchema = z.object({

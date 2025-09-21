@@ -47,11 +47,16 @@
     "pdfjs-dist": "^5.4.149",
     "playwright": "^1.55.0",
     "winston": "^3.17.0",
-    "zod": "^3.25.76"
+    "zod": "^4.1.11"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
+  },
+  "overrides": {
+    "glob": "^10.4.0",
+    "rimraf": "^5.0.0",
+    "inflight": "npm:@isaacs/inflight@^1.0.6"
   }
 }
