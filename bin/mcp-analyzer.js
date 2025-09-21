@@ -89,7 +89,7 @@ Quick Start:
   3. Restart Claude Desktop
   4. mcp-content-analyzer start
 
-For more info: https://github.com/your-team/mcp-content-analyzer
+For more info: https://github.com/DuncanDam/my-mcp
       `);
       break;
   }

@@ -10,10 +10,10 @@ A comprehensive MCP (Model Context Protocol) server system built with Hono and T
 
 ### For Team Members:
 ```bash
-# 1. Install globally (one-time setup)
-npm install -g /path/to/mcp-content-analyzer
+# 1. Install directly from GitHub (one-time setup)
+npm install -g git+https://github.com/DuncanDam/my-mcp.git
 
-# 2. Setup dependencies and configuration
+# 2. Setup dependencies and configuration (run once)
 mcp-content-analyzer setup
 mcp-content-analyzer config
 

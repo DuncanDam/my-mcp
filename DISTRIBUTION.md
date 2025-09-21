@@ -82,11 +82,11 @@ npm run create-distribution
 git push origin main
 
 # Team members install directly:
-npm install -g git+https://github.com/your-team/mcp-content-analyzer.git
+npm install -g git+https://github.com/DuncanDam/my-mcp.git
 
 # Updates:
 git push origin main  # You push updates
-npm update -g @your-team/mcp-content-analyzer  # They update
+npm update -g mcp-content-analyzer  # They update
 ```
 
 ### Method 3: Public npm Registry (FREE)
