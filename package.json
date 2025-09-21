@@ -7,8 +7,19 @@
   "bin": {
     "mcp-content-analyzer": "./bin/mcp-analyzer.js"
   },
+  "files": [
+    "dist/**/*",
+    "bin/**/*",
+    "src/**/*",
+    "scripts/**/*",
+    "config/**/*",
+    "tsconfig.json",
+    "docker-compose.yml",
+    "Dockerfile"
+  ],
   "scripts": {
     "build": "tsc",
+    "prepare": "npm run build",
     "start": "npm run build && node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "type-check": "tsc --noEmit",
@@ -47,12 +58,12 @@
     "pdfjs-dist": "^5.4.149",
     "playwright": "^1.55.0",
     "winston": "^3.17.0",
-    "zod": "^4.1.11"
+    "zod": "^4.1.11",
+    "typescript": "^5.9.2"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",
-    "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
+    "tsx": "^4.20.5"
   },
   "overrides": {
     "glob": "^10.4.0",
