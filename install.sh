@@ -59,6 +59,9 @@ echo "🔧 Installing dependencies..."
 cd "$INSTALL_DIR"
 npm install --production --silent
 
+# Create installation method marker
+echo "script" > "$INSTALL_DIR/.install-method"
+
 # Create binary symlink
 echo "🔗 Creating binary link..."
 chmod +x "$INSTALL_DIR/bin/mcp-analyzer.js"
@@ -74,9 +77,13 @@ echo "You can now use the following commands:"
 echo "  mcp-content-analyzer --help    # Show help"
 echo "  mcp-content-analyzer setup     # Setup configuration"
 echo "  mcp-content-analyzer start     # Start the server"
+echo "  mcp-content-analyzer update    # Get update instructions"
 echo ""
 echo "Quick start:"
 echo "  1. mcp-content-analyzer setup"
 echo "  2. mcp-content-analyzer config"
 echo "  3. Restart Claude Desktop"
 echo "  4. mcp-content-analyzer start"
+echo ""
+echo "📋 To update in the future:"
+echo "  curl -fsSL https://raw.githubusercontent.com/DuncanDam/my-mcp/main/install.sh | bash"

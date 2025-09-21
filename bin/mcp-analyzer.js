@@ -46,6 +46,25 @@ async function main() {
 
     case 'update':
       console.log('📦 Updating MCP Content Analyzer...');
+      
+      // Check if installed via installation script (has .install-method marker)
+      const installMethodFile = join(rootDir, '.install-method');
+      const { existsSync, readFileSync } = await import('fs');
+      
+      if (existsSync(installMethodFile)) {
+        const installMethod = readFileSync(installMethodFile, 'utf8').trim();
+        
+        if (installMethod === 'script') {
+          console.log('🔄 Detected script installation. To update, please run:');
+          console.log('');
+          console.log('   curl -fsSL https://raw.githubusercontent.com/DuncanDam/my-mcp/main/install.sh | bash');
+          console.log('');
+          console.log('This will download and install the latest version.');
+          return;
+        }
+      }
+      
+      // Use npm method for npm installations
       await runCommand('npm', ['update', '-g', 'mcp-content-analyzer']);
       console.log('✅ Update complete!');
       break;
