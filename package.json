@@ -18,8 +18,8 @@
     "Dockerfile"
   ],
   "scripts": {
-    "build": "npx tsc",
-    "prepare": "npm run build",
+    "build": "./node_modules/.bin/tsc || npx tsc",
+    "postinstall": "npm run build",
     "start": "npm run build && node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "type-check": "tsc --noEmit",
