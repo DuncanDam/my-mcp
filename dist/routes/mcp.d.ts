@@ -1,3 +1,3 @@
 import { Hono } from 'hono';
-declare const mcp: Hono<import("hono/types").BlankEnv, import("hono/types").BlankSchema, "/">;
+declare const mcp: Hono;
 export { mcp as mcpRoutes };

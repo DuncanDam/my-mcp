@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { config } from '../utils/config.js';
 
-const health = new Hono();
+const health: Hono = new Hono();
 
 health.get('/', (c) => {
   return c.json({

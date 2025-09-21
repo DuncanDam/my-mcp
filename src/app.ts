@@ -4,7 +4,7 @@ import { healthRoutes } from './routes/health.js';
 import { loggerMiddleware } from './middleware/logger.js';
 import { errorHandler } from './middleware/error-handler.js';
 
-const app = new Hono();
+const app: Hono = new Hono();
 
 // Middleware
 app.use('*', loggerMiddleware);

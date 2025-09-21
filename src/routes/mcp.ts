@@ -3,7 +3,7 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { logger } from '../utils/logger.js';
 
-const mcp = new Hono();
+const mcp: Hono = new Hono();
 
 // Validation schemas
 const toolCallSchema = z.object({

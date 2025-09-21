@@ -1,3 +1,3 @@
 import { Hono } from 'hono';
-declare const health: Hono<import("hono/types").BlankEnv, import("hono/types").BlankSchema, "/">;
+declare const health: Hono;
 export { health as healthRoutes };
