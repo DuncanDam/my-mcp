@@ -8,10 +8,10 @@ A comprehensive MCP (Model Context Protocol) server system built with Hono and T
 
 ## ⚡ Quick Start (2 Minutes) - Easy Distribution
 
-### For Team Members:
+### 🚀 Recommended: Direct Installation (Bypasses npm cache issues)
 ```bash
-# 1. Install directly from GitHub (one-time setup)
-npm install -g git+https://github.com/DuncanDam/my-mcp.git
+# 1. Download and run the installation script
+curl -fsSL https://raw.githubusercontent.com/DuncanDam/my-mcp/main/install.sh | bash
 
 # 2. Setup dependencies and configuration (run once)
 mcp-content-analyzer setup
@@ -21,6 +21,14 @@ mcp-content-analyzer config
 
 # 4. Start the analyzer
 mcp-content-analyzer start
+```
+
+### 🔧 Alternative: Direct npm installation (may have cache issues)
+```bash
+# Note: Some users experience npm cache corruption with this method
+npm install -g git+https://github.com/DuncanDam/my-mcp.git
+
+# If the above fails, use the installation script method above instead
 ```
 
 ### Traditional Setup:
