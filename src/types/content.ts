@@ -166,7 +166,59 @@ export interface SimilarContentMatch {
   title: string;
   summary: string;
   topic: string;
+  chapter?: string;
+  quality_score?: number;
+  source_url?: string;
   similarity_score: number;
+}
+
+// Comprehensive content entry for the new database structure
+export interface ComprehensiveContentEntry {
+  // Core Content Information
+  sourceUrl: string;
+  title: string;
+  summary: string;
+  keyPoints: string;
+
+  // Content Analysis
+  contentType: string;
+  primaryTopic: string;
+  chapterRelevance: string;
+  culturalRelevanceScore: string;
+
+  // Quality Assessment (1-10 scale)
+  actionabilityScore: number;
+  evidenceQualityScore: number;
+  usabilityScore: number;
+  overallQualityScore: number;
+
+  // Vietnamese Context Analysis
+  hcmcContextRelevance: string;
+  familyCollaborationSupport: string;
+  generationalBridgeValue: string;
+  conversationFrameworkPotential: string;
+
+  // Implementation Details
+  implementationTools: string;
+  timelineGuidance: string;
+  familyExercisePotential: string;
+  realWorldExamples: string;
+
+  // Source Information
+  author: string;
+  publicationDate: string;
+  sourceType: string;
+  sourceCredibility: string;
+  language: string;
+
+  // Processing Status
+  processingStatus: string;
+  priorityLevel: string;
+  usageNotes: string;
+
+  // System fields
+  dateAdded: string;
+  lastModified: string;
 }
 
 export interface ScrapedContent {
