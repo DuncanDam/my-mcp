@@ -5,6 +5,17 @@
 
 set -e
 
+# Cleanup function
+cleanup() {
+    if [ -n "$TEMP_DIR" ] && [ -d "$TEMP_DIR" ]; then
+        echo "🧹 Cleaning up temporary files..."
+        rm -rf "$TEMP_DIR"
+    fi
+}
+
+# Set trap to cleanup on exit
+trap cleanup EXIT
+
 echo "🔍 MCP Content Analyzer - Installation Script"
 echo "=============================================="
 
@@ -47,23 +58,48 @@ fi
 
 # Clone the repository
 echo "📥 Downloading from GitHub..."
-git clone https://github.com/DuncanDam/my-mcp.git "$TEMP_DIR/my-mcp"
+cd "$TEMP_DIR"
+git clone https://github.com/DuncanDam/my-mcp.git
+
+# Verify clone was successful
+if [ ! -d "$TEMP_DIR/my-mcp" ]; then
+    echo "❌ Error: Failed to clone repository"
+    rm -rf "$TEMP_DIR"
+    exit 1
+fi
 
 # Copy to installation directory
 echo "📦 Installing files..."
 mkdir -p "$(dirname "$INSTALL_DIR")"
 cp -r "$TEMP_DIR/my-mcp" "$INSTALL_DIR"
 
+# Verify installation
+if [ ! -d "$INSTALL_DIR" ]; then
+    echo "❌ Error: Failed to install files"
+    rm -rf "$TEMP_DIR"
+    exit 1
+fi
+
 # Install dependencies and build
 echo "🔧 Installing dependencies..."
 cd "$INSTALL_DIR"
-npm install --silent
+if ! npm install --silent; then
+    echo "❌ Error: Failed to install dependencies"
+    rm -rf "$TEMP_DIR"
+    exit 1
+fi
 
 echo "🏗️  Building TypeScript..."
-npm run build
+if ! npm run build; then
+    echo "❌ Error: Failed to build TypeScript"
+    rm -rf "$TEMP_DIR"
+    exit 1
+fi
 
 echo "🧹 Cleaning dev dependencies..."
-npm prune --production
+if ! npm prune --production; then
+    echo "⚠️  Warning: Failed to clean dev dependencies, continuing..."
+fi
 
 # Create installation method marker
 echo "script" > "$INSTALL_DIR/.install-method"
@@ -71,7 +107,11 @@ echo "script" > "$INSTALL_DIR/.install-method"
 # Create binary symlink
 echo "🔗 Creating binary link..."
 chmod +x "$INSTALL_DIR/bin/mcp-analyzer.js"
-ln -sf "$INSTALL_DIR/bin/mcp-analyzer.js" "$BIN_DIR/my-mcp"
+if ! ln -sf "$INSTALL_DIR/bin/mcp-analyzer.js" "$BIN_DIR/my-mcp"; then
+    echo "❌ Error: Failed to create binary link"
+    rm -rf "$TEMP_DIR"
+    exit 1
+fi
 
 # Clean up
 rm -rf "$TEMP_DIR"
