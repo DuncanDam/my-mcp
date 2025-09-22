@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { writeFileSync, existsSync, mkdirSync } from 'fs';
+import { writeFileSync, existsSync, mkdirSync, readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
 import { fileURLToPath } from 'url';
@@ -22,7 +22,7 @@ function generateClaudeConfig() {
   let config = { mcpServers: {} };
   if (existsSync(configFile)) {
     try {
-      const existingConfig = JSON.parse(require('fs').readFileSync(configFile, 'utf8'));
+      const existingConfig = JSON.parse(readFileSync(configFile, 'utf8'));
       config = existingConfig;
     } catch (error) {
       console.warn('Warning: Could not parse existing config, creating new one');
@@ -39,7 +39,7 @@ function generateClaudeConfig() {
   const envPath = join(rootDir, '.env');
   if (existsSync(envPath)) {
     try {
-      const envContent = require('fs').readFileSync(envPath, 'utf8');
+      const envContent = readFileSync(envPath, 'utf8');
       const lines = envContent.split('\n');
       
       for (const line of lines) {
