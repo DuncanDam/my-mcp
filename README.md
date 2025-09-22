@@ -14,13 +14,17 @@ Then run:
 ```bash
 my-mcp setup    # Setup configuration
 my-mcp config   # Configure Claude Desktop
-# Restart Claude Desktop completely
-my-mcp start    # Start the server
+# Restart Claude Desktop completely (MCP server starts automatically)
 ```
 
 ## 🔄 Updates
 
-Same installation command updates to latest version:
+**Automatic update (recommended):**
+```bash
+my-mcp update
+```
+
+**Manual update:**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DuncanDam/my-mcp/main/install.sh | bash
 ```
@@ -44,7 +48,7 @@ curl -fsSL https://raw.githubusercontent.com/DuncanDam/my-mcp/main/install.sh | 
 |---------|-------------|
 | `my-mcp setup` | Install dependencies and setup |
 | `my-mcp config` | Configure Claude Desktop |
-| `my-mcp start` | Start the MCP server |
+| `my-mcp start` | Start server (development/testing only) |
 | `my-mcp test` | Test server connection |
 | `my-mcp dev` | Development mode |
 | `my-mcp help` | Show all commands |
@@ -74,6 +78,7 @@ git clone https://github.com/DuncanDam/my-mcp.git
 cd my-mcp
 npm install && npm run build && npm install -g .
 my-mcp setup && my-mcp config
+# Restart Claude Desktop
 ```
 
 ## 🆘 Troubleshooting
@@ -92,4 +97,4 @@ Your system works if:
 
 ---
 
-**Ready to use! Start with `my-mcp start` and test in Claude Desktop.**
+**Ready to use! After Claude Desktop restart, test the connection in Claude Desktop.**

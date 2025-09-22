@@ -23,7 +23,11 @@
     "install-global": "npm install -g .",
     "update-analyzer": "npm update -g my-mcp",
     "setup": "node scripts/setup-dependencies.js && node scripts/generate-config.js",
-    "quick-start": "npm run setup && npm run build && npm start"
+    "quick-start": "npm run setup && npm run build && npm start",
+    "test-enhanced": "npm run build && node scripts/test-enhanced-system.js",
+    "test-local": "npm run build && npm run test-enhanced",
+    "test-database-path": "npm run build && node scripts/test-database-path.js",
+    "validate-env": "node scripts/validate-env-vars.js"
   },
   "keywords": [
     "mcp",

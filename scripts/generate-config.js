@@ -59,8 +59,8 @@ function main() {
 
     console.log('\nNext steps:');
     console.log('1. Restart Claude Desktop (quit and reopen)');
-    console.log('2. Run: my-mcp start');
-    console.log('3. Test with: "Please test the MCP connection by calling test_connection with message \\"Hello MCP!\\""');
+    console.log('   → The MCP server will start automatically when Claude Desktop loads');
+    console.log('2. Test with: "Please test the MCP connection by calling test_connection with message \\"Hello MCP!\\""');
 
   } catch (error) {
     console.error('❌ Configuration generation failed:', error.message);

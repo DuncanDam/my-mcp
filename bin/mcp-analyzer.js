@@ -41,7 +41,7 @@ async function main() {
     case 'setup':
       console.log('⚙️ Setting up MCP Content Analyzer...');
       await runCommand('npm', ['run', 'setup']);
-      console.log('✅ Setup complete! Run "my-mcp start" to begin.');
+      console.log('✅ Setup complete! Run "my-mcp config" then restart Claude Desktop.');
       break;
 
     case 'update':
@@ -55,11 +55,25 @@ async function main() {
         const installMethod = readFileSync(installMethodFile, 'utf8').trim();
         
         if (installMethod === 'script') {
-          console.log('🔄 Detected script installation. To update, please run:');
+          console.log('🔄 Detected script installation. Running automatic update...');
           console.log('');
-          console.log('   curl -fsSL https://raw.githubusercontent.com/DuncanDam/my-mcp/main/install.sh | bash');
-          console.log('');
-          console.log('This will download and install the latest version.');
+          
+          try {
+            // Run the install script automatically
+            await runCommand('bash', ['-c', 'curl -fsSL https://raw.githubusercontent.com/DuncanDam/my-mcp/main/install.sh | bash'], {
+              stdio: 'inherit'
+            });
+            console.log('✅ Update completed successfully!');
+            console.log('');
+            console.log('📋 Next steps:');
+            console.log('  1. Restart Claude Desktop to load the updated version');
+            console.log('  2. Test with: my-mcp test');
+            console.log('');
+          } catch (error) {
+            console.error('❌ Update failed. You can try manually with:');
+            console.log('   curl -fsSL https://raw.githubusercontent.com/DuncanDam/my-mcp/main/install.sh | bash');
+            throw error;
+          }
           return;
         }
       }
@@ -98,15 +112,15 @@ Commands:
   start    Build and start the MCP server
   config   Generate Claude Desktop configuration
   test     Test server connection
-  update   Update to latest version
+  update   Automatically update to latest version
   dev      Start in development mode
   help     Show this help message
 
 Quick Start:
   1. my-mcp setup
   2. my-mcp config
-  3. Restart Claude Desktop
-  4. my-mcp start
+  3. Restart Claude Desktop (MCP server starts automatically)
+  4. Test in Claude Desktop
 
 For more info: https://github.com/DuncanDam/my-mcp
       `);

@@ -6,7 +6,12 @@ import { fileURLToPath } from 'url';
 import { config } from '../utils/config.js';
 import { logger } from '../utils/logger.js';
 import type { MCPToolResponse } from '../types/mcp.js';
-import type { ContentEntry, TopicCategory, DatabaseStats, SimilarContentMatch } from '../types/content.js';
+import type {
+  ContentEntry,
+  EnhancedTopicCategory,
+  DatabaseStats,
+  SimilarContentMatch
+} from '../types/content.js';
 
 export class ExcelManagerServer extends BaseMCPServer {
   private workbook: ExcelJS.Workbook | null = null;
@@ -105,47 +110,161 @@ export class ExcelManagerServer extends BaseMCPServer {
     const dir = path.dirname(this.filePath);
     await fs.mkdir(dir, { recursive: true });
 
-    // Create main content worksheet
-    // Column structure: 1=dateAdded, 2=sourceUrl, 3=title, 4=summary, 5=topicCategory, 6=keyPoints, 7=status
+    // Create enhanced content worksheet with 26 columns (A-Z structure)
     const worksheet = this.workbook.addWorksheet('Content Database');
     worksheet.columns = [
+      // Core Information (A-D)
+      { header: 'A: Link to Article', key: 'linkToArticle', width: 50 },
+      { header: 'B: Short Description/Summary', key: 'shortDescription', width: 80 },
+      { header: 'C: Category/Tags', key: 'categoryTags', width: 30 },
+      { header: 'D: Key Words/Ideas/Points of Interest', key: 'keyWordsIdeas', width: 60 },
+
+      // Book Mapping (E-F)
+      { header: 'E: Chapter Relevance', key: 'chapterRelevance', width: 30 },
+      { header: 'F: Section Mapping', key: 'sectionMapping', width: 25 },
+
+      // Audience Analysis (G-J)
+      { header: 'G: Persona Relevance', key: 'personaRelevance', width: 25 },
+      { header: 'H: Content Type', key: 'contentType', width: 20 },
+      { header: 'I: Communication Element', key: 'communicationElement', width: 30 },
+      { header: 'J: Generational Perspective', key: 'generationalPerspective', width: 25 },
+
+      // Content Quality (K-O)
+      { header: 'K: Emotional Tone', key: 'emotionalTone', width: 20 },
+      { header: 'L: Dialogue Trigger', key: 'dialogueTrigger', width: 30 },
+      { header: 'M: Actionable Content', key: 'actionableContent', width: 40 },
+      { header: 'N: Real-world Application', key: 'realWorldApplication', width: 40 },
+      { header: 'O: Supporting Evidence', key: 'supportingEvidence', width: 40 },
+
+      // Prioritization (P-R)
+      { header: 'P: Priority Level', key: 'priorityLevel', width: 15 },
+      { header: 'Q: Quote Potential', key: 'quotePotential', width: 40 },
+      { header: 'R: Case Study Value', key: 'caseStudyValue', width: 30 },
+
+      // Metadata (S-Z)
+      { header: 'S: Data/Statistics', key: 'dataStatistics', width: 30 },
+      { header: 'T: Cultural Context', key: 'culturalContext', width: 30 },
+      { header: 'U: Source Credibility', key: 'sourceCredibility', width: 20 },
+      { header: 'V: Publication Date', key: 'publicationDate', width: 15 },
+      { header: 'W: Author Background', key: 'authorBackground', width: 30 },
+      { header: 'X: Language', key: 'language', width: 15 },
+      { header: 'Y: Status', key: 'status', width: 15 },
+      { header: 'Z: Notes/Additional Comments', key: 'notesComments', width: 50 },
+
+      // System fields
       { header: 'Date Added', key: 'dateAdded', width: 15 },
-      { header: 'Source URL', key: 'sourceUrl', width: 50 },
-      { header: 'Title', key: 'title', width: 40 },
-      { header: 'Summary', key: 'summary', width: 80 },
-      { header: 'Topic Category', key: 'topicCategory', width: 20 },
-      { header: 'Key Points', key: 'keyPoints', width: 60 },
-      { header: 'Status', key: 'status', width: 15 }
+      { header: 'Last Modified', key: 'lastModified', width: 15 }
     ];
 
-    // Create topics worksheet
+    // Create enhanced topics worksheet
     const topicsSheet = this.workbook.addWorksheet('Topics');
     topicsSheet.columns = [
-      { header: 'Category', key: 'category', width: 25 },
-      { header: 'Description', key: 'description', width: 50 },
-      { header: 'Keywords', key: 'keywords', width: 40 }
+      { header: 'Category', key: 'category', width: 30 },
+      { header: 'Description', key: 'description', width: 60 },
+      { header: 'Keywords', key: 'keywords', width: 50 },
+      { header: 'Type', key: 'type', width: 15 },
+      { header: 'Chapter Mapping', key: 'chapterMapping', width: 25 }
     ];
 
-    // Add default topics
-    const defaultTopics: TopicCategory[] = [
+    // Add enhanced default topics based on book structure
+    const enhancedTopics: EnhancedTopicCategory[] = [
+      // Primary Categories (Book Chapters)
       {
-        category: 'AI Research',
-        description: 'Artificial Intelligence research and developments',
-        keywords: 'ai, artificial intelligence, machine learning, neural networks'
+        category: 'Communication Bridge',
+        description: 'Articles about parent-child dialogue and communication strategies',
+        keywords: ['dialogue', 'communication', 'conversation', 'parent-child', 'understanding'],
+        type: 'primary',
+        chapterMapping: 'Chapter 1'
       },
       {
-        category: 'Technology Trends',
-        description: 'Latest technology trends and innovations',
-        keywords: 'tech, innovation, trends, digital transformation'
+        category: 'Saigon Decision',
+        description: 'Location and opportunity discussions for family planning',
+        keywords: ['location', 'opportunity', 'decision-making', 'family-planning', 'geography'],
+        type: 'primary',
+        chapterMapping: 'Chapter 2'
       },
       {
-        category: 'Business Strategy',
-        description: 'Business strategy and management insights',
-        keywords: 'business, strategy, management, leadership'
+        category: 'Generational Learning',
+        description: 'Success playbook differences between generations',
+        keywords: ['generational-gap', 'learning-styles', 'success-strategies', 'mentorship'],
+        type: 'primary',
+        chapterMapping: 'Chapter 3'
+      },
+      {
+        category: 'Common Ground',
+        description: 'Finding shared values and goals between family members',
+        keywords: ['shared-values', 'family-goals', 'common-interests', 'unity'],
+        type: 'primary',
+        chapterMapping: 'Chapter 4'
+      },
+      {
+        category: 'Family Stories',
+        description: 'Real case studies and family experiences',
+        keywords: ['case-studies', 'family-experiences', 'real-stories', 'examples'],
+        type: 'primary',
+        chapterMapping: 'Chapter 5'
+      },
+      {
+        category: '4-Year Journey',
+        description: 'University process and family support throughout education',
+        keywords: ['university', 'education', 'college-planning', 'academic-support'],
+        type: 'primary',
+        chapterMapping: 'Chapter 6'
+      },
+      {
+        category: 'Practical Implementation',
+        description: 'Financial, housing, network planning and practical steps',
+        keywords: ['practical-steps', 'implementation', 'planning', 'execution'],
+        type: 'primary',
+        chapterMapping: 'Chapter 7'
+      },
+
+      // Secondary Tags
+      {
+        category: 'Financial Planning',
+        description: 'Budgets, costs, ROI calculations for education and family decisions',
+        keywords: ['budget', 'costs', 'roi', 'financial-planning', 'investment'],
+        type: 'secondary'
+      },
+      {
+        category: 'Career Pathways',
+        description: 'Different success routes and career opportunities',
+        keywords: ['career', 'pathways', 'success-routes', 'opportunities'],
+        type: 'secondary'
+      },
+      {
+        category: 'University Selection',
+        description: 'School choice and admission processes',
+        keywords: ['university-selection', 'admissions', 'school-choice', 'education'],
+        type: 'secondary'
+      },
+      {
+        category: 'Family Dynamics',
+        description: 'Relationships and communication patterns within families',
+        keywords: ['family-relationships', 'dynamics', 'communication-patterns'],
+        type: 'secondary'
+      },
+      {
+        category: 'Cultural Context',
+        description: 'Vietnamese family traditions and cultural expectations',
+        keywords: ['vietnamese-culture', 'traditions', 'cultural-expectations', 'heritage'],
+        type: 'secondary'
+      },
+      {
+        category: 'Emotional Support',
+        description: 'Anxiety, stress, and confidence building strategies',
+        keywords: ['emotional-support', 'anxiety', 'stress-management', 'confidence'],
+        type: 'secondary'
       }
     ];
 
-    topicsSheet.addRows(defaultTopics);
+    topicsSheet.addRows(enhancedTopics.map(topic => ({
+      category: topic.category,
+      description: topic.description,
+      keywords: topic.keywords.join(', '),
+      type: topic.type,
+      chapterMapping: topic.chapterMapping || ''
+    })));
 
     // Save the file
     await this.workbook.xlsx.writeFile(this.filePath);

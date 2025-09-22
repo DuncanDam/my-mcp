@@ -48,8 +48,3 @@ Thumbs.db
 # Testing
 test-results/
 playwright-report/
-
-design/
-tasks/
-data/
-CLAUDE.md
