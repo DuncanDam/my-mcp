@@ -84,13 +84,20 @@ async function main() {
       break;
 
     case 'config':
-      console.log('🔧 Generating Claude Desktop configuration...');
+      console.log('🔧 Running configuration wizard...');
+      await runCommand('node', ['scripts/config-wizard.js']);
+      console.log('\n🔧 Generating Claude Desktop configuration...');
       await runCommand('node', ['scripts/generate-config.js']);
       break;
 
     case 'test':
       console.log('🧪 Testing MCP server connection...');
       await runCommand('node', ['scripts/test-connection.js']);
+      break;
+
+    case 'validate':
+      console.log('🔍 Validating configuration paths...');
+      await runCommand('node', ['scripts/validate-paths.js']);
       break;
 
     case 'dev':
@@ -108,17 +115,18 @@ async function main() {
 Usage: my-mcp <command>
 
 Commands:
-  setup    Setup dependencies and configuration
+  setup    Setup dependencies and basic configuration
   start    Build and start the MCP server
-  config   Generate Claude Desktop configuration
+  config   Interactive configuration wizard (paths, settings)
   test     Test server connection
+  validate Validate configuration paths
   update   Automatically update to latest version
   dev      Start in development mode
   help     Show this help message
 
 Quick Start:
   1. my-mcp setup
-  2. my-mcp config
+  2. my-mcp config (configure Excel and content catalog paths)
   3. Restart Claude Desktop (MCP server starts automatically)
   4. Test in Claude Desktop
 

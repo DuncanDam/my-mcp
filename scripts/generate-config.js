@@ -32,13 +32,35 @@ function generateClaudeConfig() {
   // Get Node.js path - use absolute path to avoid ENOENT errors
   const nodePath = process.execPath;
 
+  // Load environment variables from .env file
+  const envVars = { NODE_ENV: 'production' };
+  
+  // Try to load .env file
+  const envPath = join(rootDir, '.env');
+  if (existsSync(envPath)) {
+    try {
+      const envContent = require('fs').readFileSync(envPath, 'utf8');
+      const lines = envContent.split('\n');
+      
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (trimmedLine && !trimmedLine.startsWith('#')) {
+          const [key, ...valueParts] = trimmedLine.split('=');
+          if (key && valueParts.length > 0) {
+            envVars[key.trim()] = valueParts.join('=').trim();
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Warning: Could not load .env file, using defaults');
+    }
+  }
+
   // Add our MCP server
   config.mcpServers['my-mcp'] = {
     command: nodePath,
     args: [join(rootDir, 'dist', 'index.js')],
-    env: {
-      NODE_ENV: 'production'
-    }
+    env: envVars
   };
 
   // Write config

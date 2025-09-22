@@ -29,9 +29,19 @@ mkdir -p data logs config
 
 # Set up environment file
 if [ ! -f .env ]; then
-    echo "📝 Creating .env file from template..."
-    cp .env.template .env
-    echo "⚠️  Please update .env file with your configuration."
+    echo "📝 Setting up environment configuration..."
+    if [ -f env.template ]; then
+        cp env.template .env
+        echo "✅ Created .env file from template"
+    else
+        echo "⚠️  No template found, creating basic .env file"
+        cat > .env << 'EOF'
+# MCP Content Analyzer Configuration
+EXCEL_DATABASE_PATH=./data/content-database.xlsx
+CONTENT_CATALOG_PATH=./data/content-catalog-guidelines.md
+EOF
+    fi
+    echo "⚠️  Please run 'my-mcp config' to configure your paths and settings."
 fi
 
 # Build TypeScript
