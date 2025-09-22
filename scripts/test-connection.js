@@ -43,7 +43,7 @@ function testMCPConnection() {
     setTimeout(() => {
       child.kill();
 
-      if (output.includes('tools') || output.includes('mcp-content-analyzer')) {
+      if (output.includes('tools') || output.includes('my-mcp')) {
         console.log('✅ MCP server is responding correctly!');
         console.log('\nServer capabilities detected:');
         console.log('  - MCP protocol communication ✓');

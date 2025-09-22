@@ -17,7 +17,7 @@ class MCPContentAnalyzer {
 
   constructor() {
     this.server = new Server({
-      name: 'mcp-content-analyzer',
+      name: 'my-mcp',
       version: '1.0.0'
     }, {
       capabilities: {

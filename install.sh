@@ -27,7 +27,7 @@ if [ -z "$NPM_PREFIX" ]; then
     exit 1
 fi
 
-INSTALL_DIR="$NPM_PREFIX/lib/node_modules/mcp-content-analyzer"
+INSTALL_DIR="$NPM_PREFIX/lib/node_modules/my-mcp"
 BIN_DIR="$NPM_PREFIX/bin"
 TEMP_DIR=$(mktemp -d)
 
@@ -40,24 +40,30 @@ if [ -d "$INSTALL_DIR" ]; then
     rm -rf "$INSTALL_DIR"
 fi
 
-if [ -f "$BIN_DIR/mcp-content-analyzer" ]; then
+if [ -f "$BIN_DIR/my-mcp" ]; then
     echo "🧹 Removing existing binary link..."
-    rm -f "$BIN_DIR/mcp-content-analyzer"
+    rm -f "$BIN_DIR/my-mcp"
 fi
 
 # Clone the repository
 echo "📥 Downloading from GitHub..."
-git clone https://github.com/DuncanDam/my-mcp.git "$TEMP_DIR/mcp-content-analyzer"
+git clone https://github.com/DuncanDam/my-mcp.git "$TEMP_DIR/my-mcp"
 
 # Copy to installation directory
 echo "📦 Installing files..."
 mkdir -p "$(dirname "$INSTALL_DIR")"
-cp -r "$TEMP_DIR/mcp-content-analyzer" "$INSTALL_DIR"
+cp -r "$TEMP_DIR/my-mcp" "$INSTALL_DIR"
 
-# Install dependencies
+# Install dependencies and build
 echo "🔧 Installing dependencies..."
 cd "$INSTALL_DIR"
-npm install --production --silent
+npm install --silent
+
+echo "🏗️  Building TypeScript..."
+npm run build
+
+echo "🧹 Cleaning dev dependencies..."
+npm prune --production
 
 # Create installation method marker
 echo "script" > "$INSTALL_DIR/.install-method"
@@ -65,7 +71,7 @@ echo "script" > "$INSTALL_DIR/.install-method"
 # Create binary symlink
 echo "🔗 Creating binary link..."
 chmod +x "$INSTALL_DIR/bin/mcp-analyzer.js"
-ln -sf "$INSTALL_DIR/bin/mcp-analyzer.js" "$BIN_DIR/mcp-content-analyzer"
+ln -sf "$INSTALL_DIR/bin/mcp-analyzer.js" "$BIN_DIR/my-mcp"
 
 # Clean up
 rm -rf "$TEMP_DIR"
@@ -74,16 +80,16 @@ echo ""
 echo "✅ Installation completed successfully!"
 echo ""
 echo "You can now use the following commands:"
-echo "  mcp-content-analyzer --help    # Show help"
-echo "  mcp-content-analyzer setup     # Setup configuration"
-echo "  mcp-content-analyzer start     # Start the server"
-echo "  mcp-content-analyzer update    # Get update instructions"
+echo "  my-mcp --help    # Show help"
+echo "  my-mcp setup     # Setup configuration"
+echo "  my-mcp start     # Start the server"
+echo "  my-mcp update    # Get update instructions"
 echo ""
 echo "Quick start:"
-echo "  1. mcp-content-analyzer setup"
-echo "  2. mcp-content-analyzer config"
+echo "  1. my-mcp setup"
+echo "  2. my-mcp config"
 echo "  3. Restart Claude Desktop"
-echo "  4. mcp-content-analyzer start"
+echo "  4. my-mcp start"
 echo ""
 echo "📋 To update in the future:"
 echo "  curl -fsSL https://raw.githubusercontent.com/DuncanDam/my-mcp/main/install.sh | bash"

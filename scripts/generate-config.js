@@ -30,7 +30,7 @@ function generateClaudeConfig() {
   }
 
   // Add our MCP server
-  config.mcpServers['mcp-content-analyzer'] = {
+  config.mcpServers['my-mcp'] = {
     command: 'node',
     args: [join(rootDir, 'dist', 'index.js')],
     env: {
@@ -56,7 +56,7 @@ function main() {
 
     console.log('\nNext steps:');
     console.log('1. Restart Claude Desktop (quit and reopen)');
-    console.log('2. Run: mcp-content-analyzer start');
+    console.log('2. Run: my-mcp start');
     console.log('3. Test with: "Please test the MCP connection by calling test_connection with message \\"Hello MCP!\\""');
 
   } catch (error) {

@@ -2,10 +2,22 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileTypeFromFile } from 'file-type';
 import mime from 'mime-types';
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import mammoth from 'mammoth';
 import type { DocumentContent, DocumentMetadata } from '../types/content.js';
 import { ContentExtractor } from './content-extractor.js';
+
+// Polyfill for PDF.js in Node.js environment
+if (typeof globalThis.DOMMatrix === 'undefined') {
+  globalThis.DOMMatrix = class DOMMatrix {
+    constructor(_values?: string | number[]) {
+      // Simple polyfill for basic matrix operations
+      this.a = 1; this.b = 0; this.c = 0; this.d = 1; this.e = 0; this.f = 0;
+    }
+    a: number; b: number; c: number; d: number; e: number; f: number;
+  } as any;
+}
+
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 export class DocumentProcessor {
   static async detectFileType(filePath: string): Promise<{ mimeType: string; extension: string; format: string }> {

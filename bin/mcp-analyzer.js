@@ -41,7 +41,7 @@ async function main() {
     case 'setup':
       console.log('⚙️ Setting up MCP Content Analyzer...');
       await runCommand('npm', ['run', 'setup']);
-      console.log('✅ Setup complete! Run "mcp-content-analyzer start" to begin.');
+      console.log('✅ Setup complete! Run "my-mcp start" to begin.');
       break;
 
     case 'update':
@@ -65,7 +65,7 @@ async function main() {
       }
       
       // Use npm method for npm installations
-      await runCommand('npm', ['update', '-g', 'mcp-content-analyzer']);
+      await runCommand('npm', ['update', '-g', 'my-mcp']);
       console.log('✅ Update complete!');
       break;
 
@@ -91,7 +91,7 @@ async function main() {
       console.log(`
 🔍 MCP Content Analyzer - Easy Distribution Edition
 
-Usage: mcp-content-analyzer <command>
+Usage: my-mcp <command>
 
 Commands:
   setup    Setup dependencies and configuration
@@ -103,10 +103,10 @@ Commands:
   help     Show this help message
 
 Quick Start:
-  1. mcp-content-analyzer setup
-  2. mcp-content-analyzer config
+  1. my-mcp setup
+  2. my-mcp config
   3. Restart Claude Desktop
-  4. mcp-content-analyzer start
+  4. my-mcp start
 
 For more info: https://github.com/DuncanDam/my-mcp
       `);

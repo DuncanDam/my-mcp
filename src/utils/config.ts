@@ -36,6 +36,6 @@ export const config = {
 
   team: {
     name: process.env.TEAM_NAME || 'default_team',
-    serverName: process.env.SERVER_NAME || 'mcp-content-analyzer'
+    serverName: process.env.SERVER_NAME || 'my-mcp'
   }
 } as const;

@@ -67,9 +67,9 @@ async function main() {
 
     console.log('\n✅ Setup completed successfully!');
     console.log('\nNext steps:');
-    console.log('1. Run: mcp-content-analyzer config');
+    console.log('1. Run: my-mcp config');
     console.log('2. Restart Claude Desktop');
-    console.log('3. Run: mcp-content-analyzer start');
+    console.log('3. Run: my-mcp start');
 
   } catch (error) {
     console.error('\n❌ Setup failed:', error.message);

@@ -18,14 +18,14 @@ async function checkForUpdates() {
     const currentVersion = packageJson.version;
 
     // Check latest version on npm
-    const latestVersion = execSync('npm view mcp-content-analyzer version', { encoding: 'utf8' }).trim();
+    const latestVersion = execSync('npm view my-mcp version', { encoding: 'utf8' }).trim();
 
     console.log(`Current version: ${currentVersion}`);
     console.log(`Latest version:  ${latestVersion}`);
 
     if (currentVersion !== latestVersion) {
       console.log('\n📦 Update available!');
-      console.log('Run: mcp-content-analyzer update');
+      console.log('Run: my-mcp update');
       return true;
     } else {
       console.log('\n✅ You have the latest version!');
@@ -43,7 +43,7 @@ async function autoUpdate() {
     console.log('📦 Updating MCP Content Analyzer...');
 
     // Update globally
-    execSync('npm update -g mcp-content-analyzer', { stdio: 'inherit' });
+    execSync('npm update -g my-mcp', { stdio: 'inherit' });
 
     console.log('✅ Update completed!');
     console.log('🔄 Please restart the MCP server to use the new version.');
