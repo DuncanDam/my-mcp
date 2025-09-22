@@ -55,7 +55,7 @@ fi
 
 # Generate Claude Desktop configuration
 echo "⚙️ Generating Claude Desktop configuration..."
-./scripts/generate-config.sh
+node scripts/generate-config.js
 
 # Create default topic categories
 echo "📝 Creating default configuration files..."
