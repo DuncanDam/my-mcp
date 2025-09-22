@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from 'fs';
 import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { createInterface } from 'readline';
@@ -40,18 +40,18 @@ function validatePath(path, isDirectory = false) {
   const resolvedPath = resolve(rootDir, path);
   
   if (isDirectory) {
-    return existsSync(resolvedPath) && require('fs').statSync(resolvedPath).isDirectory();
+    return existsSync(resolvedPath) && statSync(resolvedPath).isDirectory();
   } else {
     // For files, check if directory exists and file can be created
-    const dir = require('path').dirname(resolvedPath);
-    return existsSync(dir) || require('fs').mkdirSync(dir, { recursive: true });
+    const dir = dirname(resolvedPath);
+    return existsSync(dir) || mkdirSync(dir, { recursive: true });
   }
 }
 
 // Helper function to create directory if it doesn't exist
 function ensureDirectory(path) {
   const resolvedPath = resolve(rootDir, path);
-  const dir = require('path').dirname(resolvedPath);
+  const dir = dirname(resolvedPath);
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
   }
