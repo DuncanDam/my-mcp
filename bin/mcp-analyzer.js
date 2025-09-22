@@ -59,10 +59,24 @@ async function main() {
           console.log('');
           
           try {
-            // Run the install script automatically
-            await runCommand('bash', ['-c', 'curl -fsSL https://raw.githubusercontent.com/DuncanDam/my-mcp/main/install.sh | bash'], {
-              stdio: 'inherit'
-            });
+            // Download install script to temp file and run it
+            const { mkdtemp, writeFile } = await import('fs/promises');
+            const { tmpdir } = await import('os');
+            const tempDir = await mkdtemp(join(tmpdir(), 'my-mcp-update-'));
+            const scriptPath = join(tempDir, 'install.sh');
+            
+            // Download the script
+            console.log('📥 Downloading latest install script...');
+            await runCommand('curl', ['-fsSL', 'https://raw.githubusercontent.com/DuncanDam/my-mcp/main/install.sh', '-o', scriptPath]);
+            
+            // Make it executable and run it
+            console.log('🚀 Running installation...');
+            await runCommand('chmod', ['+x', scriptPath]);
+            await runCommand('bash', [scriptPath], { stdio: 'inherit' });
+            
+            // Clean up
+            await runCommand('rm', ['-rf', tempDir]);
+            
             console.log('✅ Update completed successfully!');
             console.log('');
             console.log('📋 Next steps:');
