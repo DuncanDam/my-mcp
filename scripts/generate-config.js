@@ -29,9 +29,12 @@ function generateClaudeConfig() {
     }
   }
 
+  // Get Node.js path - use absolute path to avoid ENOENT errors
+  const nodePath = process.execPath;
+
   // Add our MCP server
   config.mcpServers['my-mcp'] = {
-    command: 'node',
+    command: nodePath,
     args: [join(rootDir, 'dist', 'index.js')],
     env: {
       NODE_ENV: 'production'
