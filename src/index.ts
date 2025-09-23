@@ -4,6 +4,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { config } from './utils/config.js';
 import { logger } from './utils/logger.js';
+import { getServerInfo } from './utils/version.js';
 import { ExcelManagerServer } from './servers/excel-manager.js';
 import { WebScraperServer } from './servers/web-scraper.js';
 import { DocumentReaderServer } from './servers/document-reader.js';
@@ -16,9 +17,10 @@ class MCPContentAnalyzer {
   private documentReader: DocumentReaderServer;
 
   constructor() {
+    // We'll set the server info dynamically in the start method
     this.server = new Server({
       name: 'my-mcp',
-      version: '1.0.0'
+      version: '1.0.0'  // Temporary, will be updated from package.json
     }, {
       capabilities: {
         tools: {}
@@ -148,6 +150,7 @@ class MCPContentAnalyzer {
           case 'add_content_entry':
           case 'search_similar_content':
           case 'get_topic_categories':
+          case 'delete_content_entry':
           case 'get_database_stats':
             result = await this.excelManager.handleToolCall(name, args || {});
             break;
@@ -203,16 +206,20 @@ class MCPContentAnalyzer {
   }
 
   private async handleGetServerInfo() {
+    const serverInfo = await getServerInfo();
+
     const response = {
       success: true,
       data: {
-        name: 'MCP Content Analyzer',
-        version: '1.0.0',
-        description: 'Hono-based MCP server for content analysis and Excel integration',
+        name: serverInfo.name,
+        version: serverInfo.version,
+        description: serverInfo.description,
+        author: serverInfo.author,
         phase: 'Phase 4 - Document Processing Integration',
         features: [
           'Excel database management',
           'Content entry creation',
+          'Content entry deletion',
           'Similar content search',
           'Topic categorization',
           'Database statistics',
@@ -220,7 +227,8 @@ class MCPContentAnalyzer {
           'URL accessibility checking',
           'Document processing (PDF, DOCX, TXT, RTF)',
           'Complete content analysis workflow',
-          'Claude vision text integration'
+          'Claude vision text integration',
+          'Enhanced formatting preservation'
         ],
         config: {
           logLevel: config.server.logLevel,
@@ -487,6 +495,9 @@ class MCPContentAnalyzer {
 
   async start(): Promise<void> {
     try {
+      // Get version info from package.json
+      const serverInfo = await getServerInfo();
+
       // Initialize all servers
       await this.excelManager.initialize();
       await this.webScraper.initialize();
@@ -496,8 +507,11 @@ class MCPContentAnalyzer {
       await this.server.connect(transport);
 
       logger.info('MCP Content Analyzer started successfully', {
+        name: serverInfo.name,
+        version: serverInfo.version,
+        description: serverInfo.description,
+        author: serverInfo.author,
         phase: 'Phase 4 - Document Processing Integration',
-        version: '1.0.0',
         excelDatabase: config.excel.databasePath
       });
     } catch (error) {
