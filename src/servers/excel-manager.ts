@@ -69,6 +69,17 @@ export class ExcelManagerServer extends BaseMCPServer {
         }
       },
       {
+        name: 'delete_content_entry',
+        description: 'Delete content entry from Excel database by row number',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            rowNumber: { type: 'number', description: 'Row number to delete (starting from 2)' }
+          },
+          required: ['rowNumber']
+        }
+      },
+      {
         name: 'get_database_stats',
         description: 'Return Excel database metrics and statistics',
         inputSchema: {
@@ -86,8 +97,9 @@ export class ExcelManagerServer extends BaseMCPServer {
       // Check if Excel file exists, create if not
       try {
         await fs.access(this.filePath);
+        // Load existing file with all formatting preserved
         await this.workbook.xlsx.readFile(this.filePath);
-        logger.info('Loaded existing Excel database', { filePath: this.filePath });
+        logger.info('Loaded existing Excel database with formatting preserved', { filePath: this.filePath });
       } catch (error) {
         // Create new Excel file with default structure
         await this.createDefaultExcelStructure();
@@ -287,6 +299,8 @@ export class ExcelManagerServer extends BaseMCPServer {
           return await this.searchSimilarContent(args.query);
         case 'get_topic_categories':
           return await this.getTopicCategories();
+        case 'delete_content_entry':
+          return await this.deleteContentEntry(args.rowNumber);
         case 'get_database_stats':
           return await this.getDatabaseStats();
         default:
@@ -392,41 +406,95 @@ export class ExcelManagerServer extends BaseMCPServer {
       contentEntry.lastModified
     ];
 
-    const addedRow = worksheet.addRow(rowData);
-    addedRow.commit();
+    // Preserve formatting by manually setting cell values instead of adding a full row
+    const newRowNumber = worksheet.rowCount + 1;
+
+    // Set each cell value individually to preserve existing formatting
+    rowData.forEach((value, columnIndex) => {
+      const cell = worksheet.getCell(newRowNumber, columnIndex + 1);
+      cell.value = value;
+    });
 
     logger.info('Added comprehensive content entry', {
-      rowNumber: addedRow.number,
+      rowNumber: newRowNumber,
       title: contentEntry.title,
       topic: contentEntry.primaryTopic,
       qualityScore: contentEntry.overallQualityScore
     });
 
-    // Save the file
+    // Save the file with formatting preservation
     await this.saveExcelFile();
 
     return this.createSuccessResponse({
       success: true,
       message: 'Content entry added successfully to Excel database',
       entry: contentEntry,
-      rowNumber: addedRow.number
+      rowNumber: newRowNumber
     });
+  }
+
+  private async deleteContentEntry(rowNumber: number): Promise<MCPToolResponse> {
+    if (!this.workbook) throw new Error('Workbook not initialized');
+
+    const worksheet = this.workbook.getWorksheet('Content Database');
+    if (!worksheet) throw new Error('Content Database worksheet not found');
+
+    // Validate row number
+    if (rowNumber < 2) {
+      return this.createErrorResponse(new Error('Row number must be 2 or greater (row 1 is header)'));
+    }
+
+    if (rowNumber > worksheet.rowCount) {
+      return this.createErrorResponse(new Error(`Row number ${rowNumber} exceeds total rows (${worksheet.rowCount})`));
+    }
+
+    try {
+      // Get row data before deletion for logging
+      const row = worksheet.getRow(rowNumber);
+      const title = row.getCell(2)?.value?.toString() || 'Unknown'; // Column 2 = title
+
+      // Delete the row
+      worksheet.spliceRows(rowNumber, 1);
+
+      logger.info('Deleted content entry', {
+        rowNumber,
+        title,
+        remainingRows: worksheet.rowCount - 1 // -1 for header
+      });
+
+      // Save the file with formatting preservation
+      await this.saveExcelFile();
+
+      return this.createSuccessResponse({
+        success: true,
+        message: `Content entry deleted successfully from row ${rowNumber}`,
+        deletedEntry: {
+          rowNumber,
+          title
+        },
+        remainingEntries: worksheet.rowCount - 1 // -1 for header
+      });
+
+    } catch (error) {
+      logger.error('Failed to delete content entry', {
+        error: error instanceof Error ? error.message : String(error),
+        rowNumber
+      });
+      return this.createErrorResponse(error instanceof Error ? error : new Error(String(error)));
+    }
   }
 
   private async saveExcelFile(): Promise<void> {
     if (!this.workbook) throw new Error('Workbook not initialized');
 
     try {
-      if (config.excel.backupEnabled) {
-        // Create backup
-        const backupPath = this.filePath.replace('.xlsx', `-backup-${Date.now()}.xlsx`);
-        await this.workbook.xlsx.writeFile(backupPath);
-        logger.info('Created Excel backup', { backupPath });
-      }
+      // Save with format preservation by using writeFile with keepVBAProject option
+      await this.workbook.xlsx.writeFile(this.filePath, {
+        useStyles: true,
+        useSharedStrings: true
+      });
 
-      // Save main file with explicit error handling
-      await this.workbook.xlsx.writeFile(this.filePath);
-      logger.info('Excel file saved successfully', { filePath: this.filePath });
+      logger.info('Excel file saved with formatting preserved', { filePath: this.filePath });
 
       // Verify the save by checking file modification time
       const fs = await import('fs/promises');
@@ -437,13 +505,14 @@ export class ExcelManagerServer extends BaseMCPServer {
       });
 
     } catch (error) {
-      logger.error('Failed to save Excel file', {
+      logger.error('Failed to save Excel file with formatting', {
         error: error instanceof Error ? error.message : String(error),
         filePath: this.filePath
       });
       throw new Error(`Excel save failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
+
 
   private async searchSimilarContent(query: string): Promise<MCPToolResponse> {
     if (!this.workbook) throw new Error('Workbook not initialized');

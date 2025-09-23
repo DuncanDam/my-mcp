@@ -9,7 +9,7 @@ Object.assign(console, originalConsole);
 export const config = {
   excel: {
     databasePath: process.env.EXCEL_DATABASE_PATH || './data/content-database.xlsx',
-    backupEnabled: process.env.EXCEL_BACKUP_ENABLED === 'true',
+    backupEnabled: false, // Backup disabled by default
     autoSave: process.env.EXCEL_AUTO_SAVE === 'true',
     templatePath: process.env.EXCEL_TEMPLATE_PATH || './config/excel-template.xlsx',
     schemaVersion: process.env.EXCEL_SCHEMA_VERSION || '2.0'

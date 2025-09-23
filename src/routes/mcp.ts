@@ -88,6 +88,11 @@ mcp.get('/tools', (c) => {
       category: 'excel'
     },
     {
+      name: 'delete_content_entry',
+      description: 'Delete content entry from Excel database',
+      category: 'excel'
+    },
+    {
       name: 'get_database_stats',
       description: 'Return Excel database metrics and analytics',
       category: 'excel'
