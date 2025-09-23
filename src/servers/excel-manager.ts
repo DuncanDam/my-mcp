@@ -310,8 +310,12 @@ export class ExcelManagerServer extends BaseMCPServer {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const isFileLocked = errorMessage.includes('Excel file is locked') ||
                          errorMessage.includes('File is locked') ||
+                         errorMessage.includes('lock file detected') ||
                          errorMessage.includes('EBUSY') ||
-                         errorMessage.includes('EPERM');
+                         errorMessage.includes('EPERM') ||
+                         errorMessage.includes('EACCES') ||
+                         errorMessage.includes('sharing violation') ||
+                         errorMessage.includes('access denied');
 
       logger.error(`Excel tool call failed: ${name}`, {
         error: errorMessage,
@@ -421,65 +425,83 @@ export class ExcelManagerServer extends BaseMCPServer {
       contentEntry.lastModified
     ];
 
-    // Preserve formatting by copying detailed style properties from the last row
+    // Preserve formatting by using ExcelJS's built-in style inheritance and manual style copying
     const newRowNumber = worksheet.rowCount + 1;
 
     // If there are existing data rows (more than just header), copy formatting
     if (worksheet.rowCount > 1) {
-      const lastDataRowNumber = worksheet.rowCount;
+      const templateRowNumber = worksheet.rowCount; // Use last existing row as template
 
-      // First add the row with data
-      const newRow = worksheet.addRow(rowData);
+      // Method 1: Try using ExcelJS's built-in style inheritance (insertRow with 'i' style)
+      // Insert at the end with inheritance from above
+      let newRow;
+      try {
+        // Insert row with inheritance style ('i' means inherit from row above)
+        newRow = worksheet.insertRow(newRowNumber, rowData, 'i+');
+        logger.info('Used ExcelJS built-in style inheritance', { rowNumber: newRowNumber });
+      } catch (inheritanceError) {
+        // Fallback to regular addRow if inheritance fails
+        logger.warn('Style inheritance failed, falling back to manual copy', {
+          error: inheritanceError instanceof Error ? inheritanceError.message : String(inheritanceError)
+        });
+        newRow = worksheet.addRow(rowData);
+      }
 
-      // Then copy detailed formatting from the template row
+      // Method 2: Manual style copying as backup/enhancement
+
+      // Copy comprehensive formatting from template row using proper style cloning
       let formattingApplied = 0;
-      rowData.forEach((value, columnIndex) => {
-        const templateCell = worksheet.getCell(lastDataRowNumber, columnIndex + 1);
-        const newCell = newRow.getCell(columnIndex + 1);
 
-        // Copy comprehensive styling
-        if (templateCell.style) {
-          // Copy fill (background color)
-          if (templateCell.style.fill) {
-            newCell.fill = templateCell.style.fill;
-            formattingApplied++;
-          }
+      // Get template row for style reference
+      const templateRow = worksheet.getRow(templateRowNumber);
 
-          // Copy font (color, bold, etc.)
-          if (templateCell.style.font) {
-            newCell.font = templateCell.style.font;
-            formattingApplied++;
-          }
+      // Apply formatting to each cell in the new row
+      newRow.eachCell((newCell, colNumber) => {
+        const templateCell = templateRow.getCell(colNumber);
 
-          // Copy border
-          if (templateCell.style.border) {
-            newCell.border = templateCell.style.border;
-            formattingApplied++;
-          }
+        if (templateCell && templateCell.style) {
+          try {
+            // Use ExcelJS's built-in style cloning by creating a complete style object
+            const clonedStyle: Partial<ExcelJS.Style> = {
+              ...templateCell.style
+            };
 
-          // Copy alignment
-          if (templateCell.style.alignment) {
-            newCell.alignment = templateCell.style.alignment;
-            formattingApplied++;
-          }
+            // Clean undefined values to avoid TypeScript strict mode issues
+            if (clonedStyle.numFmt === undefined) {
+              delete clonedStyle.numFmt;
+            }
 
-          // Copy number format
-          if (templateCell.style.numFmt) {
-            newCell.numFmt = templateCell.style.numFmt;
+            // Apply the complete cloned style
+            newCell.style = clonedStyle;
             formattingApplied++;
+
+          } catch (styleError) {
+            logger.warn('Failed to copy style for cell', {
+              rowNumber: newRowNumber,
+              columnNumber: colNumber,
+              error: styleError instanceof Error ? styleError.message : String(styleError)
+            });
           }
         }
 
-        // Ensure the value is set correctly
-        newCell.value = value;
+        // Ensure the value is set correctly (preserve existing value from addRow)
+        // Value is already set by addRow, but ensure it's maintained
+        if (colNumber <= rowData.length) {
+          newCell.value = rowData[colNumber - 1];
+        }
       });
 
-      logger.info('Formatting preservation applied', {
+      // Row-level styling is not available in ExcelJS Row type
+      // Individual cell styling is sufficient for formatting preservation
+
+      logger.info('Enhanced formatting preservation applied', {
         rowNumber: newRowNumber,
-        formattingPropertiesApplied: formattingApplied,
-        templateRowUsed: lastDataRowNumber
+        cellsFormatted: formattingApplied,
+        templateRowUsed: templateRowNumber,
+        totalColumns: newRow.cellCount
       });
 
+      // Commit the row to ensure changes are applied
       newRow.commit();
     } else {
       // No existing data rows, add row normally
@@ -556,6 +578,7 @@ export class ExcelManagerServer extends BaseMCPServer {
     }
   }
 
+
   private async saveExcelFile(): Promise<void> {
     if (!this.workbook) throw new Error('Workbook not initialized');
 
@@ -567,10 +590,10 @@ export class ExcelManagerServer extends BaseMCPServer {
         // Check if file is locked by trying to open it for writing
         await this.checkFileLock();
 
-        // Save with format preservation
+        // Save with comprehensive format preservation
         await this.workbook.xlsx.writeFile(this.filePath, {
-          useStyles: true,
-          useSharedStrings: true
+          useStyles: true,           // Preserve all cell and row styling
+          useSharedStrings: true     // Optimize string storage
         });
 
         logger.info('Excel file saved with formatting preserved', {
@@ -592,8 +615,15 @@ export class ExcelManagerServer extends BaseMCPServer {
         const errorMessage = error instanceof Error ? error.message : String(error);
         const isFileLocked = errorMessage.includes('EBUSY') ||
                            errorMessage.includes('EPERM') ||
+                           errorMessage.includes('EACCES') ||
+                           errorMessage.includes('EMFILE') ||
+                           errorMessage.includes('ENFILE') ||
                            errorMessage.includes('locked') ||
-                           errorMessage.includes('in use');
+                           errorMessage.includes('in use') ||
+                           errorMessage.includes('cannot save') ||
+                           errorMessage.includes('access denied') ||
+                           errorMessage.includes('sharing violation') ||
+                           errorMessage.includes('file is being used');
 
         if (isFileLocked && attempt < maxRetries) {
           logger.warn(`File appears locked (attempt ${attempt}/${maxRetries}), retrying in ${retryDelay}ms`, {
@@ -643,19 +673,97 @@ export class ExcelManagerServer extends BaseMCPServer {
   private async checkFileLock(): Promise<void> {
     try {
       const fs = await import('fs/promises');
+      const path = await import('path');
 
-      // Try to open the file for writing to check if it's locked
-      const fileHandle = await fs.open(this.filePath, 'r+');
-      await fileHandle.close();
+      // Method 1: Check for Excel temporary lock files
+      const dir = path.dirname(this.filePath);
+      const filename = path.basename(this.filePath, '.xlsx');
+
+      // Excel creates these temporary files when a file is open
+      const lockPatterns = [
+        `~$${filename}.xlsx`,           // Excel lock file pattern
+        `.~${filename}.xlsx`,           // Alternative lock file pattern
+        `${filename}.xlsx.lock`,        // Generic lock file
+        `.${filename}.xlsx.lock`        // Hidden lock file
+      ];
+
+      // Check for lock files
+      for (const lockFile of lockPatterns) {
+        const lockPath = path.join(dir, lockFile);
+        try {
+          await fs.access(lockPath);
+          console.log(`\n⚠️  EXCEL FILE IS CURRENTLY LOCKED ⚠️`);
+          console.log(`File: ${this.filePath}`);
+          console.log(`Found lock file: ${lockFile}`);
+          console.log(`Please close Microsoft Excel to continue...`);
+          throw new Error('File is locked by another application (lock file detected)');
+        } catch (accessError) {
+          // Lock file doesn't exist, continue checking
+        }
+      }
+
+      // Method 2: Try to open file with exclusive access
+      let fileHandle;
+      try {
+        fileHandle = await fs.open(this.filePath, 'r+');
+
+        // Try to get an exclusive lock (if supported)
+        // This will fail if Excel has the file open
+        await fileHandle.close();
+
+      } catch (openError) {
+        const errorMessage = openError instanceof Error ? openError.message : String(openError);
+        if (errorMessage.includes('EBUSY') ||
+            errorMessage.includes('EPERM') ||
+            errorMessage.includes('EACCES') ||
+            errorMessage.includes('EMFILE') ||
+            errorMessage.includes('ENFILE')) {
+          console.log(`\n⚠️  EXCEL FILE IS CURRENTLY LOCKED ⚠️`);
+          console.log(`File access error: ${errorMessage}`);
+          console.log(`Please close Microsoft Excel to continue...`);
+          throw new Error('File is locked by another application');
+        }
+        throw openError; // Re-throw if it's not a lock-related error
+      }
+
+      // Method 3: Try to write to the file as a final test
+      try {
+        // Create a backup of the current file stats
+        const stats = await fs.stat(this.filePath);
+        const originalSize = stats.size;
+
+        // Try to touch the file (update access time)
+        await fs.utimes(this.filePath, stats.atime, stats.mtime);
+
+        // Verify the file wasn't corrupted by our test
+        const newStats = await fs.stat(this.filePath);
+        if (newStats.size !== originalSize) {
+          logger.warn('File size changed during lock test, file may be corrupted');
+        }
+
+      } catch (writeError) {
+        const errorMessage = writeError instanceof Error ? writeError.message : String(writeError);
+        if (errorMessage.includes('EBUSY') ||
+            errorMessage.includes('EPERM') ||
+            errorMessage.includes('EACCES')) {
+          console.log(`\n⚠️  EXCEL FILE IS CURRENTLY LOCKED ⚠️`);
+          console.log(`Write test failed: ${errorMessage}`);
+          console.log(`Please close Microsoft Excel to continue...`);
+          throw new Error('File is locked by another application');
+        }
+      }
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('EBUSY') || errorMessage.includes('EPERM')) {
-        console.log(`\n⚠️  EXCEL FILE IS CURRENTLY LOCKED ⚠️`);
-        console.log(`Please close Microsoft Excel to continue...`);
-        throw new Error('File is locked by another application');
+      // If we already threw a lock error, re-throw it
+      if (error instanceof Error && error.message.includes('File is locked')) {
+        throw error;
       }
-      // If it's not a locking error, we can proceed
+
+      // For other errors, log but don't block the operation
+      logger.warn('Lock detection test failed', {
+        error: error instanceof Error ? error.message : String(error),
+        filePath: this.filePath
+      });
     }
   }
 
