@@ -57,9 +57,10 @@
     "mime-types": "^3.0.1",
     "pdfjs-dist": "^5.4.149",
     "playwright": "^1.55.0",
+    "typescript": "^5.9.2",
     "winston": "^3.17.0",
-    "zod": "^4.1.11",
-    "typescript": "^5.9.2"
+    "xlsx-populate": "^1.21.0",
+    "zod": "^4.1.11"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",
