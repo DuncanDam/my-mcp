@@ -307,10 +307,25 @@ export class ExcelManagerServer extends BaseMCPServer {
           throw new Error(`Unknown tool: ${name}`);
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isFileLocked = errorMessage.includes('Excel file is locked') ||
+                         errorMessage.includes('File is locked') ||
+                         errorMessage.includes('EBUSY') ||
+                         errorMessage.includes('EPERM');
+
       logger.error(`Excel tool call failed: ${name}`, {
-        error: error instanceof Error ? error.message : String(error),
-        args
+        error: errorMessage,
+        args,
+        isFileLocked
       });
+
+      // Return user-friendly error message for file locks
+      if (isFileLocked) {
+        return this.createErrorResponse(new Error(
+          '📁 Excel file is currently open in Microsoft Excel. Please close Excel and try again.'
+        ));
+      }
+
       return this.createErrorResponse(error instanceof Error ? error : new Error(String(error)));
     }
   }
@@ -406,14 +421,71 @@ export class ExcelManagerServer extends BaseMCPServer {
       contentEntry.lastModified
     ];
 
-    // Preserve formatting by manually setting cell values instead of adding a full row
+    // Preserve formatting by copying detailed style properties from the last row
     const newRowNumber = worksheet.rowCount + 1;
 
-    // Set each cell value individually to preserve existing formatting
-    rowData.forEach((value, columnIndex) => {
-      const cell = worksheet.getCell(newRowNumber, columnIndex + 1);
-      cell.value = value;
-    });
+    // If there are existing data rows (more than just header), copy formatting
+    if (worksheet.rowCount > 1) {
+      const lastDataRowNumber = worksheet.rowCount;
+
+      // First add the row with data
+      const newRow = worksheet.addRow(rowData);
+
+      // Then copy detailed formatting from the template row
+      let formattingApplied = 0;
+      rowData.forEach((value, columnIndex) => {
+        const templateCell = worksheet.getCell(lastDataRowNumber, columnIndex + 1);
+        const newCell = newRow.getCell(columnIndex + 1);
+
+        // Copy comprehensive styling
+        if (templateCell.style) {
+          // Copy fill (background color)
+          if (templateCell.style.fill) {
+            newCell.fill = templateCell.style.fill;
+            formattingApplied++;
+          }
+
+          // Copy font (color, bold, etc.)
+          if (templateCell.style.font) {
+            newCell.font = templateCell.style.font;
+            formattingApplied++;
+          }
+
+          // Copy border
+          if (templateCell.style.border) {
+            newCell.border = templateCell.style.border;
+            formattingApplied++;
+          }
+
+          // Copy alignment
+          if (templateCell.style.alignment) {
+            newCell.alignment = templateCell.style.alignment;
+            formattingApplied++;
+          }
+
+          // Copy number format
+          if (templateCell.style.numFmt) {
+            newCell.numFmt = templateCell.style.numFmt;
+            formattingApplied++;
+          }
+        }
+
+        // Ensure the value is set correctly
+        newCell.value = value;
+      });
+
+      logger.info('Formatting preservation applied', {
+        rowNumber: newRowNumber,
+        formattingPropertiesApplied: formattingApplied,
+        templateRowUsed: lastDataRowNumber
+      });
+
+      newRow.commit();
+    } else {
+      // No existing data rows, add row normally
+      const addedRow = worksheet.addRow(rowData);
+      addedRow.commit();
+    }
 
     logger.info('Added comprehensive content entry', {
       rowNumber: newRowNumber,
@@ -487,29 +559,103 @@ export class ExcelManagerServer extends BaseMCPServer {
   private async saveExcelFile(): Promise<void> {
     if (!this.workbook) throw new Error('Workbook not initialized');
 
+    const maxRetries = 3;
+    const retryDelay = 1000; // 1 second
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        // Check if file is locked by trying to open it for writing
+        await this.checkFileLock();
+
+        // Save with format preservation
+        await this.workbook.xlsx.writeFile(this.filePath, {
+          useStyles: true,
+          useSharedStrings: true
+        });
+
+        logger.info('Excel file saved with formatting preserved', {
+          filePath: this.filePath,
+          attempt
+        });
+
+        // Verify the save by checking file modification time
+        const fs = await import('fs/promises');
+        const stats = await fs.stat(this.filePath);
+        logger.info('Excel file verification', {
+          size: stats.size,
+          lastModified: stats.mtime.toISOString()
+        });
+
+        return; // Success, exit retry loop
+
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const isFileLocked = errorMessage.includes('EBUSY') ||
+                           errorMessage.includes('EPERM') ||
+                           errorMessage.includes('locked') ||
+                           errorMessage.includes('in use');
+
+        if (isFileLocked && attempt < maxRetries) {
+          logger.warn(`File appears locked (attempt ${attempt}/${maxRetries}), retrying in ${retryDelay}ms`, {
+            error: errorMessage,
+            filePath: this.filePath
+          });
+
+          // Show user-friendly message for the first retry
+          if (attempt === 1) {
+            console.log(`\n⚠️  EXCEL FILE IS LOCKED ⚠️`);
+            console.log(`The Excel file is currently open in Microsoft Excel or another application.`);
+            console.log(`Please close the Excel file and the operation will continue automatically.`);
+            console.log(`Retrying in ${retryDelay / 1000} second(s)... (attempt ${attempt}/${maxRetries})\n`);
+          } else {
+            console.log(`Still waiting... (attempt ${attempt}/${maxRetries})`);
+          }
+
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          continue;
+        }
+
+        // Final attempt failed or non-locking error
+        logger.error('Failed to save Excel file', {
+          error: errorMessage,
+          filePath: this.filePath,
+          finalAttempt: attempt,
+          isFileLocked
+        });
+
+        if (isFileLocked) {
+          console.log(`\n❌ UNABLE TO SAVE EXCEL FILE ❌`);
+          console.log(`The Excel file is still locked after ${maxRetries} attempts.`);
+          console.log(`Please:`);
+          console.log(`1. Close Microsoft Excel completely`);
+          console.log(`2. Try the operation again`);
+          console.log(`3. Make sure no other applications have the file open\n`);
+
+          throw new Error(`Excel file is locked by another application. Please close Microsoft Excel and try again.`);
+        } else {
+          throw new Error(`Excel save failed: ${errorMessage}`);
+        }
+      }
+    }
+  }
+
+  private async checkFileLock(): Promise<void> {
     try {
-      // Save with format preservation by using writeFile with keepVBAProject option
-      await this.workbook.xlsx.writeFile(this.filePath, {
-        useStyles: true,
-        useSharedStrings: true
-      });
-
-      logger.info('Excel file saved with formatting preserved', { filePath: this.filePath });
-
-      // Verify the save by checking file modification time
       const fs = await import('fs/promises');
-      const stats = await fs.stat(this.filePath);
-      logger.info('Excel file verification', {
-        size: stats.size,
-        lastModified: stats.mtime.toISOString()
-      });
+
+      // Try to open the file for writing to check if it's locked
+      const fileHandle = await fs.open(this.filePath, 'r+');
+      await fileHandle.close();
 
     } catch (error) {
-      logger.error('Failed to save Excel file with formatting', {
-        error: error instanceof Error ? error.message : String(error),
-        filePath: this.filePath
-      });
-      throw new Error(`Excel save failed: ${error instanceof Error ? error.message : String(error)}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('EBUSY') || errorMessage.includes('EPERM')) {
+        console.log(`\n⚠️  EXCEL FILE IS CURRENTLY LOCKED ⚠️`);
+        console.log(`Please close Microsoft Excel to continue...`);
+        throw new Error('File is locked by another application');
+      }
+      // If it's not a locking error, we can proceed
     }
   }
 
