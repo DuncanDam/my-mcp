@@ -122,49 +122,49 @@ export class ExcelManagerServer extends BaseMCPServer {
     const dir = path.dirname(this.filePath);
     await fs.mkdir(dir, { recursive: true });
 
-    // Create content worksheet with clean column headers (no A:B: prefixes)
+    // Create content worksheet with enhanced formatting and text wrapping
     const worksheet = this.workbook.addWorksheet('Content Database');
     worksheet.columns = [
-      // Core Content Information
-      { header: 'Source URL', key: 'sourceUrl', width: 50 },
-      { header: 'Title', key: 'title', width: 60 },
-      { header: 'Summary', key: 'summary', width: 80 },
-      { header: 'Key Points', key: 'keyPoints', width: 60 },
+      // Core Content Information - with enhanced widths and wrapping
+      { header: 'Source URL', key: 'sourceUrl', width: 25 },
+      { header: 'Title', key: 'title', width: 35 },
+      { header: 'Summary', key: 'summary', width: 50 },
+      { header: 'Key Points', key: 'keyPoints', width: 40 },
 
       // Content Analysis
-      { header: 'Content Type', key: 'contentType', width: 20 },
-      { header: 'Primary Topic', key: 'primaryTopic', width: 30 },
-      { header: 'Chapter Relevance', key: 'chapterRelevance', width: 30 },
+      { header: 'Content Type', key: 'contentType', width: 18 },
+      { header: 'Primary Topic', key: 'primaryTopic', width: 22 },
+      { header: 'Chapter Relevance', key: 'chapterRelevance', width: 28 },
       { header: 'Cultural Relevance Score', key: 'culturalRelevanceScore', width: 20 },
 
       // Quality Assessment
-      { header: 'Actionability Score', key: 'actionabilityScore', width: 20 },
-      { header: 'Evidence Quality Score', key: 'evidenceQualityScore', width: 20 },
-      { header: 'Usability Score', key: 'usabilityScore', width: 18 },
-      { header: 'Overall Quality Score', key: 'overallQualityScore', width: 20 },
+      { header: 'Actionability Score', key: 'actionabilityScore', width: 15 },
+      { header: 'Evidence Quality Score', key: 'evidenceQualityScore', width: 18 },
+      { header: 'Usability Score', key: 'usabilityScore', width: 15 },
+      { header: 'Overall Quality Score', key: 'overallQualityScore', width: 18 },
 
       // Vietnamese Context Analysis
-      { header: 'HCMC Context Relevance', key: 'hcmcContextRelevance', width: 25 },
-      { header: 'Family Collaboration Support', key: 'familyCollaborationSupport', width: 30 },
-      { header: 'Generational Bridge Value', key: 'generationalBridgeValue', width: 25 },
-      { header: 'Conversation Framework Potential', key: 'conversationFrameworkPotential', width: 30 },
+      { header: 'HCMC Context Relevance', key: 'hcmcContextRelevance', width: 20 },
+      { header: 'Family Collaboration Support', key: 'familyCollaborationSupport', width: 25 },
+      { header: 'Generational Bridge Value', key: 'generationalBridgeValue', width: 22 },
+      { header: 'Conversation Framework Potential', key: 'conversationFrameworkPotential', width: 28 },
 
       // Implementation Details
-      { header: 'Implementation Tools Available', key: 'implementationTools', width: 35 },
-      { header: 'Timeline Guidance', key: 'timelineGuidance', width: 25 },
-      { header: 'Family Exercise Potential', key: 'familyExercisePotential', width: 30 },
-      { header: 'Real World Examples', key: 'realWorldExamples', width: 25 },
+      { header: 'Implementation Tools Available', key: 'implementationTools', width: 30 },
+      { header: 'Timeline Guidance', key: 'timelineGuidance', width: 18 },
+      { header: 'Family Exercise Potential', key: 'familyExercisePotential', width: 22 },
+      { header: 'Real World Examples', key: 'realWorldExamples', width: 20 },
 
       // Source Information
-      { header: 'Author', key: 'author', width: 30 },
+      { header: 'Author', key: 'author', width: 25 },
       { header: 'Publication Date', key: 'publicationDate', width: 15 },
-      { header: 'Source Type', key: 'sourceType', width: 20 },
-      { header: 'Source Credibility', key: 'sourceCredibility', width: 20 },
-      { header: 'Language', key: 'language', width: 15 },
+      { header: 'Source Type', key: 'sourceType', width: 15 },
+      { header: 'Source Credibility', key: 'sourceCredibility', width: 16 },
+      { header: 'Language', key: 'language', width: 12 },
 
       // Processing Status
-      { header: 'Processing Status', key: 'processingStatus', width: 20 },
-      { header: 'Priority Level', key: 'priorityLevel', width: 15 },
+      { header: 'Processing Status', key: 'processingStatus', width: 16 },
+      { header: 'Priority Level', key: 'priorityLevel', width: 14 },
       { header: 'Usage Notes', key: 'usageNotes', width: 50 },
 
       // System fields
@@ -282,8 +282,74 @@ export class ExcelManagerServer extends BaseMCPServer {
       chapterMapping: topic.chapterMapping || ''
     })));
 
-    // Save the file
-    await this.workbook.xlsx.writeFile(this.filePath);
+    // Apply professional formatting to header row
+    const headerRow = worksheet.getRow(1);
+    headerRow.height = 35;
+
+    headerRow.eachCell((cell) => {
+      cell.style = {
+        font: {
+          bold: true,
+          color: { argb: 'FFFFFF' },
+          size: 12,
+          name: 'Segoe UI'
+        },
+        fill: {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: '1F4E79' }
+        },
+        border: {
+          top: { style: 'thin', color: { argb: '000000' } },
+          left: { style: 'thin', color: { argb: '000000' } },
+          bottom: { style: 'thin', color: { argb: '000000' } },
+          right: { style: 'thin', color: { argb: '000000' } }
+        },
+        alignment: {
+          vertical: 'middle',
+          horizontal: 'center',
+          wrapText: true
+        }
+      };
+    });
+
+    // Enhanced worksheet view settings
+    worksheet.views = [
+      {
+        state: 'frozen',
+        xSplit: 0,
+        ySplit: 1,
+        topLeftCell: 'A2',
+        activeCell: 'A2',
+        showGridLines: true,
+        showRowColHeaders: true,
+        zoomScale: 90,
+        zoomScaleNormal: 90
+      }
+    ];
+
+    // Add print settings for better printing/PDF export
+    worksheet.pageSetup = {
+      paperSize: 9, // A4
+      orientation: 'landscape',
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 0,
+      margins: {
+        left: 0.5,
+        right: 0.5,
+        top: 0.75,
+        bottom: 0.75,
+        header: 0.3,
+        footer: 0.3
+      }
+    };
+
+    // Save the file with enhanced formatting
+    await this.workbook.xlsx.writeFile(this.filePath, {
+      useStyles: true,
+      useSharedStrings: true
+    });
   }
 
   async handleToolCall(name: string, args: Record<string, any>): Promise<MCPToolResponse> {
@@ -501,11 +567,15 @@ export class ExcelManagerServer extends BaseMCPServer {
         totalColumns: newRow.cellCount
       });
 
+      // Apply enhanced formatting with text wrapping for long content
+      this.applyEnhancedRowFormatting(newRow, newRowNumber, rowData);
+
       // Commit the row to ensure changes are applied
       newRow.commit();
     } else {
-      // No existing data rows, add row normally
+      // No existing data rows, add row normally with base formatting
       const addedRow = worksheet.addRow(rowData);
+      this.applyEnhancedRowFormatting(addedRow, newRowNumber, rowData);
       addedRow.commit();
     }
 
@@ -1159,5 +1229,169 @@ export class ExcelManagerServer extends BaseMCPServer {
     if (overallScore >= 8 && actionabilityScore >= 8) return 'High';
     if (overallScore >= 6 && actionabilityScore >= 6) return 'Medium';
     return 'Low';
+  }
+
+  private applyEnhancedRowFormatting(row: ExcelJS.Row, rowNumber: number, rowData: any[]): void {
+    // Calculate row height based on content length
+    let maxContentLength = 0;
+    rowData.forEach(content => {
+      const contentStr = content?.toString() || '';
+      if (contentStr.length > maxContentLength) {
+        maxContentLength = contentStr.length;
+      }
+    });
+
+    // Dynamic row height based on content
+    let rowHeight = 20; // Base height
+    if (maxContentLength > 100) rowHeight = 35;
+    if (maxContentLength > 200) rowHeight = 50;
+    if (maxContentLength > 300) rowHeight = 65;
+    if (maxContentLength > 500) rowHeight = 80;
+
+    row.height = rowHeight;
+
+    // Enhanced cell formatting with text wrapping
+    const isEvenRow = (rowNumber - 2) % 2 === 0;
+    const bgColor = isEvenRow ? 'F8F9FA' : 'FFFFFF';
+
+    // Columns that should have text wrapping enabled
+    const wrapColumns = [1, 2, 3, 4, 17, 21, 28]; // URL, Title, Summary, Key Points, Implementation Tools, Author, Usage Notes
+
+    row.eachCell((cell, colNumber) => {
+      // Base formatting for all data cells
+      cell.style = {
+        font: {
+          name: 'Segoe UI',
+          size: 10,
+          color: { argb: '333333' }
+        },
+        fill: {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: bgColor }
+        },
+        border: {
+          top: { style: 'thin', color: { argb: 'DDDDDD' } },
+          left: { style: 'thin', color: { argb: 'DDDDDD' } },
+          bottom: { style: 'thin', color: { argb: 'DDDDDD' } },
+          right: { style: 'thin', color: { argb: 'DDDDDD' } }
+        },
+        alignment: {
+          vertical: 'top',
+          horizontal: 'left',
+          wrapText: wrapColumns.includes(colNumber),
+          indent: 1
+        }
+      };
+
+      // Column-specific enhanced formatting with type safety
+      switch (colNumber) {
+        case 1: // Source URL
+          if (cell.value && cell.value.toString().startsWith('http') && cell.style.font) {
+            cell.style.font.color = { argb: '0066CC' };
+            cell.style.font.underline = true;
+          }
+          break;
+
+        case 2: // Title
+          if (cell.style.font) {
+            cell.style.font.bold = true;
+            cell.style.font.size = 11;
+          }
+          break;
+
+        case 6: // Primary Topic
+          if (cell.style.alignment && cell.style.font) {
+            cell.style.alignment.horizontal = 'center';
+            cell.style.font.bold = true;
+            const topic = cell.value?.toString() || '';
+
+            if (topic.includes('Communication') && cell.style.fill && 'fgColor' in cell.style.fill) {
+              cell.style.fill.fgColor = { argb: 'E3F2FD' };
+              cell.style.font.color = { argb: '1565C0' };
+            } else if (topic.includes('Bridge') && cell.style.fill && 'fgColor' in cell.style.fill) {
+              cell.style.fill.fgColor = { argb: 'E8F5E8' };
+              cell.style.font.color = { argb: '2E7D32' };
+            } else if (topic.includes('Decision') && cell.style.fill && 'fgColor' in cell.style.fill) {
+              cell.style.fill.fgColor = { argb: 'FFF3E0' };
+              cell.style.font.color = { argb: 'F57C00' };
+            }
+          }
+          break;
+
+        case 9: case 10: case 11: case 12: // Score columns
+          if (cell.style.alignment) {
+            cell.style.alignment.horizontal = 'center';
+            cell.style.numFmt = '0';
+            const scoreValue = cell.value?.toString() || '';
+            const score = parseInt(scoreValue);
+
+            if (!isNaN(score) && cell.style.font && cell.style.fill && 'fgColor' in cell.style.fill) {
+              if (score >= 8) {
+                cell.style.font.color = { argb: '28A745' };
+                cell.style.font.bold = true;
+                cell.style.fill.fgColor = { argb: 'D4EDDA' };
+              } else if (score >= 6) {
+                cell.style.font.color = { argb: 'FD7E14' };
+                cell.style.fill.fgColor = { argb: 'FFF3CD' };
+              } else if (score > 0) {
+                cell.style.font.color = { argb: 'DC3545' };
+                cell.style.fill.fgColor = { argb: 'F8D7DA' };
+              }
+            }
+          }
+          break;
+
+        case 26: // Processing Status
+          if (cell.style.alignment && cell.style.font && cell.style.fill && 'fgColor' in cell.style.fill) {
+            cell.style.alignment.horizontal = 'center';
+            const status = cell.value?.toString() || '';
+
+            if (status === 'New') {
+              cell.style.fill.fgColor = { argb: 'D1ECF1' };
+              cell.style.font.color = { argb: '0C5460' };
+              cell.style.font.bold = true;
+            } else if (status === 'Processed') {
+              cell.style.fill.fgColor = { argb: 'D4EDDA' };
+              cell.style.font.color = { argb: '155724' };
+              cell.style.font.bold = true;
+            }
+          }
+          break;
+
+        case 27: // Priority Level
+          if (cell.style.alignment && cell.style.font && cell.style.fill && 'fgColor' in cell.style.fill) {
+            cell.style.alignment.horizontal = 'center';
+            const priority = cell.value?.toString() || '';
+
+            if (priority === 'High') {
+              cell.style.fill.fgColor = { argb: 'F8D7DA' };
+              cell.style.font.color = { argb: '721C24' };
+              cell.style.font.bold = true;
+            } else if (priority === 'Medium') {
+              cell.style.fill.fgColor = { argb: 'FFF3CD' };
+              cell.style.font.color = { argb: '856404' };
+            } else if (priority === 'Low') {
+              cell.style.fill.fgColor = { argb: 'D1ECF1' };
+              cell.style.font.color = { argb: '0C5460' };
+            }
+          }
+          break;
+
+        case 29: case 30: // Date columns
+          if (cell.style.alignment) {
+            cell.style.alignment.horizontal = 'center';
+            cell.style.numFmt = 'mm/dd/yyyy';
+          }
+          break;
+
+        default:
+          // Center alignment for most other columns
+          if (colNumber >= 5 && colNumber <= 27 && colNumber !== 17 && colNumber !== 21 && cell.style.alignment) {
+            cell.style.alignment.horizontal = 'center';
+          }
+          break;
+      }
+    });
   }
 }
