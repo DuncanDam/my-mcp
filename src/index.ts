@@ -8,6 +8,7 @@ import { getServerInfo } from './utils/version.js';
 import { ExcelManagerServer } from './servers/excel-manager.js';
 import { WebScraperServer } from './servers/web-scraper.js';
 import { DocumentReaderServer } from './servers/document-reader.js';
+import { OCRProcessorServer } from './servers/ocr-processor.js';
 import type { MCPTool } from './types/mcp.js';
 
 class MCPContentAnalyzer {
@@ -15,6 +16,7 @@ class MCPContentAnalyzer {
   private excelManager: ExcelManagerServer;
   private webScraper: WebScraperServer;
   private documentReader: DocumentReaderServer;
+  private ocrProcessor: OCRProcessorServer;
 
   constructor() {
     // We'll set the server info dynamically in the start method
@@ -30,6 +32,7 @@ class MCPContentAnalyzer {
     this.excelManager = new ExcelManagerServer();
     this.webScraper = new WebScraperServer();
     this.documentReader = new DocumentReaderServer();
+    this.ocrProcessor = new OCRProcessorServer();
     this.setupHandlers();
   }
 
@@ -39,6 +42,7 @@ class MCPContentAnalyzer {
       const excelTools = await this.excelManager.getTools();
       const webScraperTools = await this.webScraper.getTools();
       const documentTools = await this.documentReader.getTools();
+      const ocrTools = await this.ocrProcessor.getTools();
 
       const tools: MCPTool[] = [
         {
@@ -121,7 +125,8 @@ class MCPContentAnalyzer {
         },
         ...excelTools,
         ...webScraperTools,
-        ...documentTools
+        ...documentTools,
+        ...ocrTools
       ];
 
       return { tools };
@@ -163,6 +168,11 @@ class MCPContentAnalyzer {
           case 'extract_document_text':
           case 'process_extracted_text':
             result = await this.documentReader.handleToolCall(name, args || {});
+            break;
+          case 'process_screenshot':
+          case 'check_ocr_capabilities':
+          case 'extract_text_batch':
+            result = await this.ocrProcessor.handleToolCall(name, args || {});
             break;
           default:
             throw new Error(`Unknown tool: ${name}`);
@@ -226,6 +236,9 @@ class MCPContentAnalyzer {
           'Web content scraping',
           'URL accessibility checking',
           'Document processing (PDF, DOCX, TXT, RTF)',
+          'OCR text extraction (Google Vision API + Tesseract fallback)',
+          'Screenshot text processing',
+          'Batch image text extraction',
           'Complete content analysis workflow',
           'Claude vision text integration',
           'Enhanced formatting preservation'
@@ -502,6 +515,7 @@ class MCPContentAnalyzer {
       await this.excelManager.initialize();
       await this.webScraper.initialize();
       await this.documentReader.initialize();
+      await this.ocrProcessor.initialize();
 
       const transport = new StdioServerTransport();
       await this.server.connect(transport);
